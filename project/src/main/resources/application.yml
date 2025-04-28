@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: project
+  liquibase:
+    enabled: false
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_CONTAINER_NAME:localhost}:5432/${POSTGRES_DB:project}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  cache:
+    cache-names:
+      - rate-limit-buckets-project
+    caffeine:
+      spec: maximumSize=100000,expireAfterAccess=3600s
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 120MB
+
+bucket4j:
+  enabled: true
+  filters:
+    - cache-name: rate-limit-buckets-project
+      url: /.*
+      http-response-body: "{ \"status\": 429, \"error\": \"Too Many Requests\", \"message\": \"You have exhausted your API Request Quota\" }"
+      rate-limits:
+        cache-key: "getRemoteAddr()"
+        bandwidths:
+          - capacity: 100
+            time: 1
+            unit: minutes
+            refill-speed: interval
+
+server:
+  port: 8080
+  forward-headers-strategy: NATIVE
+
+logging:
+  config: classpath:log4j2-plain.xml
+
+spring-doc:
+  swagger-ui:
+    path: /swagger-ui
+  default-produces-media-type: application/json
+
+management:
+  endpoint:
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+jwt:
+  secret: ${JWT_SECRET:55d731c263e1ddb8e50eec214ccf010207b82cfb415c76976751a12f1f04c2ca}
+  accessTokenTtl: 1440 # in minutes, equals 1 day
