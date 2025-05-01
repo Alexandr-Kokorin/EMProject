@@ -1,39 +1,42 @@
-package em.service.users;
+package em.service.user;
 
-import em.controller.users.payload.UserResponse;
-import em.controller.users.payload.UserUpdateRequest;
+import em.controller.user.payload.UserResponse;
+import em.controller.user.payload.UserUpdateRequest;
 import em.domain.entity.ApplicationUser;
 import em.domain.entity.enums.GlobalPermissionName;
 import em.domain.repository.ApplicationUserRepository;
 import em.exception.entity.not_found.UserNotFoundException;
-import em.service.security.AuthenticationService;
-import em.service.users.mapper.UserMapper;
-import em.service.util.UserUtilService;
-import jakarta.transaction.Transactional;
+import em.service.user.mapper.UserMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class ApplicationUserService {
 
-    private final AuthenticationService authService;
+    private final PasswordEncoder passwordEncoder;
     private final UserUtilService userUtilService;
 
     private final ApplicationUserRepository userRepository;
     private final UserMapper mapper;
 
-    public List<UserResponse> findAllUsers() {
+    public List<UserResponse> findAllUsers(Authentication authentication) {
+        userUtilService.checkUserGlobalPermission(authentication, GlobalPermissionName.ADMIN);
+
         List<ApplicationUser> users = userRepository.findAll();
         return users.stream()
             .map(mapper::entityToResponse)
             .toList();
     }
 
-    public UserResponse findUser(String email) {
+    public UserResponse findUser(Authentication authentication, String email) {
+        userUtilService.checkUserGlobalPermission(authentication, GlobalPermissionName.ADMIN);
+
         var user = userRepository.findByEmail(email)
             .orElseThrow(() -> new UserNotFoundException(email));
         return mapper.entityToResponse(user);
@@ -41,22 +44,23 @@ public class ApplicationUserService {
 
     public UserResponse getCurrentUser(Authentication authentication) {
         var currentUser = userUtilService.findUserByAuthentication(authentication);
-
         return mapper.entityToResponse(currentUser);
     }
 
-    public UserResponse updateUser(Authentication authentication, UserUpdateRequest updateRequest) {
-        var userToUpdate = userUtilService.findUserByAuthentication(authentication);
+    public UserResponse updateUser(Authentication authentication, UserUpdateRequest request) {
+        userUtilService.checkUserGlobalPermission(authentication, GlobalPermissionName.ADMIN);
 
-        userToUpdate.setHashedPassword(authService.encodePassword(updateRequest.password()));
-        userToUpdate.setDisplayName(updateRequest.displayName());
+        var userToUpdate = userRepository.findByEmail(request.email())
+            .orElseThrow(() -> new UserNotFoundException(request.email()));
+
+        userToUpdate.setHashedPassword(passwordEncoder.encode(request.password()));
+        userToUpdate.setDisplayName(request.displayName());
 
         return mapper.entityToResponse(userRepository.save(userToUpdate));
     }
 
     public void deleteUser(Authentication authentication, String email) {
-        userUtilService.checkUserGlobalPermission(
-            userUtilService.findUserByAuthentication(authentication), GlobalPermissionName.ADMIN);
+        userUtilService.checkUserGlobalPermission(authentication, GlobalPermissionName.ADMIN);
 
         userRepository.delete(userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(email)));
     }

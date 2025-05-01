@@ -1,6 +1,6 @@
-package em.service.users.mapper;
+package em.service.user.mapper;
 
-import em.controller.users.payload.UserResponse;
+import em.controller.user.payload.UserResponse;
 import em.domain.entity.ApplicationUser;
 import em.domain.entity.GlobalPermission;
 import jakarta.validation.constraints.NotNull;

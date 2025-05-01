@@ -1,9 +1,9 @@
 package em.controller.users;
 
 import em.controller.BaseControllerTest;
-import em.controller.secutiry.payload.AuthenticationRequest;
-import em.controller.secutiry.payload.AuthenticationResponse;
-import em.controller.users.payload.UserUpdateRequest;
+import em.controller.security.payload.AuthenticationRequest;
+import em.controller.security.payload.AuthenticationResponse;
+import em.controller.user.payload.UserUpdateRequest;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,10 +62,10 @@ public class ApplicationUserControllerTest extends BaseControllerTest {
 
     @Test
     @SneakyThrows
-    @DisplayName("Should return 403 for unauthorized access to get all users")
+    @DisplayName("Should return 401 for unauthorized access to get all users")
     public void shouldReturn403ForUnauthorizedAccessToGetAllUsers() {
         mockMvc.perform(get(URL + "/all"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().is(401));
     }
 
     @Test
@@ -73,7 +73,7 @@ public class ApplicationUserControllerTest extends BaseControllerTest {
     @DisplayName("Should find user by email")
     public void shouldFindUserByEmail() {
         var token = login().accessToken();
-        String email = "auth@example.com";
+        String email = "admin@gmail.com";
 
         mockMvc.perform(get(URL)
                 .header("Authorization", "Bearer " + token)
@@ -102,13 +102,13 @@ public class ApplicationUserControllerTest extends BaseControllerTest {
 
     @Test
     @SneakyThrows
-    @DisplayName("Should return 403 for unauthorized access to find user by email")
+    @DisplayName("Should return 401 for unauthorized access to find user by email")
     public void shouldReturn403ForUnauthorizedAccessToFindUserByEmail() {
         String email = "auth@example.com";
         mockMvc.perform(get(URL)
                 .param("email", email)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isForbidden());
+            .andExpect(status().is(401));
     }
 
     @Test
@@ -131,6 +131,7 @@ public class ApplicationUserControllerTest extends BaseControllerTest {
     public void shouldUpdateUser() {
         var token = login().accessToken();
         var updateRequest = UserUpdateRequest.builder()
+            .email("admin@gmail.com")
             .displayName("Updated name")
             .password("Updated password")
             .build();
@@ -166,7 +167,7 @@ public class ApplicationUserControllerTest extends BaseControllerTest {
 
     @Test
     @SneakyThrows
-    @DisplayName("Should return 403 for unauthorized access to update user")
+    @DisplayName("Should return 401 for unauthorized access to update user")
     public void shouldReturn403ForUnauthorizedAccessToUpdateUser() {
         var updateRequest = UserUpdateRequest.builder()
             .displayName("Updated name")
@@ -178,27 +179,14 @@ public class ApplicationUserControllerTest extends BaseControllerTest {
         mockMvc.perform(put(URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(request))
-            .andExpect(status().isForbidden());
+            .andExpect(status().is(401));
     }
 
     @Test
     @SneakyThrows
-    @DisplayName("Should return 403 for unauthorized access to delete user")
+    @DisplayName("Should return 401 for unauthorized access to delete user")
     public void shouldReturn403ForUnauthorizedAccessToDeleteUser() {
         mockMvc.perform(delete(URL))
-            .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @SneakyThrows
-    @DisplayName("Should return 400 for invalid search request")
-    public void shouldReturn400ForInvalidSearchRequest() {
-        var token = login().accessToken();
-
-        mockMvc.perform(post(URL + "/all/advanced_search")
-                .header("Authorization", "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-            )
-            .andExpect(status().isBadRequest());
+            .andExpect(status().is(401));
     }
 }

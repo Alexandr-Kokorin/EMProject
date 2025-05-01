@@ -1,4 +1,4 @@
-package em.controller.secutiry.payload;
+package em.controller.user.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,11 +8,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
 @Builder
-@Schema(description = "Запрос на регистрацию, содержащий информацию о новом пользователе")
-public record RegisterRequest(
+@Schema(description = "Запрос на обновление данных о пользователе")
+public record UserUpdateRequest(
     @Schema(description = "Адрес электронной почты пользователя", example = "user@example.com")
-    @Pattern(message = "{user.email.invalid}",
-             regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
+    @Pattern(message = "{user.email.invalid}", regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     @NotBlank(message = "{user.mail.is_blank}")
     String email,
 

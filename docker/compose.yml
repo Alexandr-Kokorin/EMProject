@@ -19,6 +19,7 @@ services:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       POSTGRES_CONTAINER_NAME: $POSTGRES_CONTAINER_NAME
       JWT_SECRET: $JWT_SECRET
+      ENCRYPTION_KEY: $ENCRYPTION_KEY
     depends_on:
       liquibase-migrations:
         condition: service_completed_successfully

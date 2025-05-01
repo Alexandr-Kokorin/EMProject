@@ -65,3 +65,7 @@ management:
 jwt:
   secret: ${JWT_SECRET:55d731c263e1ddb8e50eec214ccf010207b82cfb415c76976751a12f1f04c2ca}
   accessTokenTtl: 1440 # in minutes, equals 1 day
+
+encryption:
+  aes:
+    key: ${ENCRYPTION_KEY:mysecretkey12345}

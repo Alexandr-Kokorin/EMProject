@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import em.exception.entity.not_found.UserNotFoundException;
 import em.service.security.ClaimsExtractorService;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,6 +28,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@SuppressWarnings("ReturnCount")
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -43,9 +45,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         try {
             var authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+            String path = request.getRequestURI();
 
             if (authHeader == null || !authHeader.startsWith(BEARER_TYPE)) {
-                filterChain.doFilter(request, response);
+                if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")
+                    || path.startsWith("/actuator")
+                    || path.equals("/api/v1/auth/authenticate")) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                addProblemDetailToResponse(request, response, "user.unauthorized", null);
                 return;
             }
 
@@ -65,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             addProblemDetailToResponse(request, response, "token.login_field_not_found", null);
         } catch (UserNotFoundException e) {
             addProblemDetailToResponse(request, response, "user.email.not_found", new Object[] {e.getMessage()});
-        } catch (SignatureException e) {
+        } catch (SignatureException | MalformedJwtException e) {
             addProblemDetailToResponse(request, response, "token.signature_invalid", null);
         }
     }

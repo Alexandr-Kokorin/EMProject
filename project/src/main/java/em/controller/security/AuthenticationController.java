@@ -1,8 +1,8 @@
-package em.controller.secutiry;
+package em.controller.security;
 
-import em.controller.secutiry.payload.AuthenticationRequest;
-import em.controller.secutiry.payload.AuthenticationResponse;
-import em.controller.secutiry.payload.RegisterRequest;
+import em.controller.security.payload.AuthenticationRequest;
+import em.controller.security.payload.AuthenticationResponse;
+import em.controller.security.payload.RegisterRequest;
 import em.service.security.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

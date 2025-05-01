@@ -1,14 +1,14 @@
 package em.service.security;
 
-import em.controller.secutiry.payload.AuthenticationRequest;
-import em.controller.secutiry.payload.AuthenticationResponse;
-import em.controller.secutiry.payload.RegisterRequest;
-import em.domain.entity.ApplicationUser;
+import em.controller.security.payload.AuthenticationRequest;
+import em.controller.security.payload.AuthenticationResponse;
+import em.controller.security.payload.RegisterRequest;
 import em.domain.entity.enums.GlobalPermissionName;
 import em.domain.repository.ApplicationUserRepository;
 import em.domain.repository.GlobalPermissionRepository;
 import em.exception.entity.already_exists.UserAlreadyExistsException;
-import em.service.util.UserUtilService;
+import em.service.security.mapper.AuthenticationMapper;
+import em.service.user.UserUtilService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import static em.domain.entity.enums.GlobalPermissionName.ADMIN;
 
 @Service
 @Transactional
@@ -31,21 +30,18 @@ public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationMapper mapper;
+
 
     public void registerUser(RegisterRequest request, Authentication authentication) {
-        var admin = userUtilService.findUserByAuthentication(authentication);
-        userUtilService.checkUserGlobalPermission(admin, ADMIN);
-        var permission = GlobalPermissionName.USER;
+        userUtilService.checkUserGlobalPermission(authentication, GlobalPermissionName.ADMIN);
 
-        checkEmail(request.email());
-        var globalPermission = globalPermissionRepository.findByName(permission);
+        if (appUserRepository.findByEmail(request.email()).isPresent()) {
+            throw new UserAlreadyExistsException(request.email());
+        }
 
-        var user = ApplicationUser.builder()
-            .email(request.email())
-            .displayName(request.displayName())
-            .globalPermission(globalPermission)
-            .hashedPassword(encodePassword(request.password()))
-            .build();
+        var user = mapper.requestToEntity(request, passwordEncoder);
+        user.setGlobalPermission(globalPermissionRepository.findByName(GlobalPermissionName.USER));
 
         appUserRepository.save(user);
     }
@@ -61,16 +57,5 @@ public class AuthenticationService {
         var accessToken = jwtService.generateToken(user);
 
         return new AuthenticationResponse(accessToken);
-    }
-
-    public String encodePassword(String password) {
-        return passwordEncoder.encode(password);
-    }
-
-    private void checkEmail(String email) {
-        var applicationUser = appUserRepository.findByEmail(email);
-        if (applicationUser.isPresent()) {
-            throw new UserAlreadyExistsException(email);
-        }
     }
 }

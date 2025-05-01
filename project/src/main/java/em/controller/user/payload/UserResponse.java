@@ -1,8 +1,7 @@
-package em.controller.users.payload;
+package em.controller.user.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
 import lombok.Builder;
 
 @Builder
@@ -15,7 +14,7 @@ public record UserResponse(
     @Schema(description = "Отображаемое имя пользователя", example = "Иван Иванов")
     String displayName,
     @JsonProperty("role")
-    @Schema(description = "Роль пользователя", example = "[\"USER\"]")
+    @Schema(description = "Роль пользователя", example = "USER")
     String role
 ) {
 }

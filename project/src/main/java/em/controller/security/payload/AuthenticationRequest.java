@@ -1,4 +1,4 @@
-package em.controller.secutiry.payload;
+package em.controller.security.payload;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -6,12 +6,11 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
-@Schema(description = "Запрос аутентификации, содержащий учетные данные пользователя")
 @Builder
+@Schema(description = "Запрос аутентификации, содержащий учетные данные пользователя")
 public record AuthenticationRequest(
     @Schema(description = "Адрес электронной почты пользователя", example = "user@example.com")
-    @Pattern(message = "{user.email.invalid}",
-             regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
+    @Pattern(message = "{user.email.invalid}", regexp = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")
     @NotBlank(message = "{user.email.is_blank}")
     String email,
 

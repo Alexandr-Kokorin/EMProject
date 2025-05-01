@@ -1,8 +1,8 @@
-package em.controller.users;
+package em.controller.user;
 
-import em.controller.users.payload.UserResponse;
-import em.controller.users.payload.UserUpdateRequest;
-import em.service.users.ApplicationUserService;
+import em.controller.user.payload.UserResponse;
+import em.controller.user.payload.UserUpdateRequest;
+import em.service.user.ApplicationUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,11 +44,12 @@ public class ApplicationUserController {
                      content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/all")
-    public List<UserResponse> findAllUsers() {
-        return userService.findAllUsers();
+    public List<UserResponse> findAllUsers(Authentication authentication) {
+        return userService.findAllUsers(authentication);
     }
 
-    @GetMapping("/current")
+
+    @GetMapping("/me")
     @Operation(summary = "Получить информацию о текущем пользователе",
                description = "Возвращает информацию о текущем пользователе исходя из контекста аутентификации")
     @ApiResponses(value = {
@@ -61,20 +62,22 @@ public class ApplicationUserController {
         return userService.getCurrentUser(authentication);
     }
 
+
     @GetMapping
-    @Operation(summary = "Получить информацию о пользователе по его адресу электронной почты",
-               description = "Возвращает информацию о пользователе по его адресу электронной почты")
+    @Operation(summary = "Получить информацию о пользователе по его email",
+               description = "Возвращает информацию о пользователе по его email")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Успешное получение",
                      content = @Content(schema = @Schema(implementation = UserResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Пользователь с указанным адресом электронной почты не найден",
+        @ApiResponse(responseCode = "404", description = "Пользователь с указанным email не найден",
                      content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
         @ApiResponse(responseCode = "403", description = "Ошибка аутентификации",
                      content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
-    public UserResponse findUser(@RequestParam @NotBlank String email) {
-        return userService.findUser(email);
+    public UserResponse findUser(Authentication authentication, @RequestParam @NotBlank String email) {
+        return userService.findUser(authentication, email);
     }
+
 
     @Operation(summary = "Обновить данные пользователя",
                description = "Обновляет данные о пользователе базе данных, "
@@ -97,12 +100,13 @@ public class ApplicationUserController {
         return userService.updateUser(authentication, updateRequest);
     }
 
+
     @Operation(summary = "Удалить аккаунт пользователя",
                description = "Удаляет информацию о текущем пользователе из базы данных")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Успешное удаление",
                      content = @Content),
-        @ApiResponse(responseCode = "404", description = "Пользователь с указанным адресом электронной почты не найден",
+        @ApiResponse(responseCode = "404", description = "Пользователь с указанным email не найден",
                      content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
         @ApiResponse(responseCode = "403", description = "Ошибка аутентификации",
                      content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
